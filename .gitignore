@@ -1,0 +1,58 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Archivos de configuración local
+config/config.local.php
+config/database.local.php
+
+# Archivos de logs
+logs/*.log
+*.log
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# Archivos de uploads (mantener estructura pero ignorar contenido)
+uploads/*
+!uploads/.gitkeep
+
+# Vendor (composer)
+/vendor/
+composer.lock
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de backup
+*.bak
+*.backup
+*.old
+
+# Archivos de sesión
+sessions/
+
+# Archivos de cache
+cache/
+*.cache
+
+# Archivos de configuración de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de documentación temporal
+ANALISIS_FLUJO_SISTEMA.md
+DIAGRAMA_FLUJO_SISTEMA.md
+RESUMEN_ANALISIS.md
+INSTRUCCIONES_ADMIN_SUPREMO.md
+SOLUCION_LOGIN.md
+
