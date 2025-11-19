@@ -1,0 +1,19 @@
+{
+    "name": "tec-uct/autoevaluacion",
+    "description": "Plataforma de autoevaluación estudiantil con validación docente - TEC-UCT",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^7.0",
+        "smalot/pdfparser": "^2.12",
+        "tecnickcom/tcpdf": "^6.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}

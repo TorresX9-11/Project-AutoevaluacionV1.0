@@ -20,7 +20,7 @@ if ($entorno === 'desarrollo') {
 date_default_timezone_set('America/Santiago');
 
 // Rutas base
-define('BASE_URL', 'http://localhost/autoeval/');
+define('BASE_URL', 'http://localhost/Project-AutoevaluacionV1.0/');
 define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 
 // Configuración de correo
@@ -88,6 +88,38 @@ function validarCorreoInstitucional($email, $tipo) {
         return strpos($email, DOMINIO_DOCENTE) !== false;
     }
     return false;
+}
+
+// Función para validar RUT chileno (formato con o sin puntos y guion)
+function validarRUT($rut) {
+    if (empty($rut)) return false;
+    // Normalizar: eliminar puntos, espacios y convertir a mayúsculas
+    $rut = strtoupper(preg_replace('/[^0-9Kk]/', '', $rut));
+
+    if (strlen($rut) < 2) return false;
+
+    $dv = substr($rut, -1);
+    $numero = substr($rut, 0, -1);
+
+    if (!ctype_digit($numero)) return false;
+
+    $suma = 0;
+    $multiplo = 2;
+    for ($i = strlen($numero) - 1; $i >= 0; $i--) {
+        $suma += intval($numero[$i]) * $multiplo;
+        $multiplo = ($multiplo == 7) ? 2 : $multiplo + 1;
+    }
+
+    $resto = 11 - ($suma % 11);
+    if ($resto == 11) {
+        $dvCalc = '0';
+    } elseif ($resto == 10) {
+        $dvCalc = 'K';
+    } else {
+        $dvCalc = (string)$resto;
+    }
+
+    return $dvCalc === strtoupper($dv);
 }
 ?>
 
