@@ -27,7 +27,7 @@ body {
     min-height: 100vh;
     padding-top: 56px; /* Altura del navbar fijo */
     margin: 0;
-    overflow-x: hidden;
+    overflow-x: auto;
 }
 
 /* Navbar personalizado - Fijo en la parte superior */
@@ -106,12 +106,43 @@ body > nav.navbar {
 /* Tablas responsive */
 .table-responsive {
     border-radius: 8px;
-    overflow: hidden;
+    /* Permitir scroll horizontal/vertical en tablas largas en lugar de recortar contenido */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    table-layout: auto; /* permitir columnas flexibles */
 }
 
 .table thead {
     background-color: var(--color-primary);
     color: var(--color-white);
+}
+
+/* Forzar que las celdas permitan salto de línea y no corten contenido */
+.table th,
+.table td {
+    vertical-align: middle;
+    white-space: normal; /* permitir wrapping */
+    word-break: break-word;
+}
+
+/* Evitar que columnas con texto largo colapsen el diseño en desktop: permitir ancho mínimo */
+.table td.col-ellipsis {
+    min-width: 180px;
+}
+
+/* Utilidad: forzar tabla sin wrap para habilitar scroll lateral cuando haya muchas columnas */
+.table-nowrap {
+    min-width: 900px; /* valor inicial; ajustar según necesidad */
+}
+.table-nowrap th,
+.table-nowrap td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Alertas */

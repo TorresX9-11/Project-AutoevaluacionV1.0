@@ -2,8 +2,8 @@
 require_once '../config/config.php';
 validarTipoUsuario(['docente', 'admin']);
 
+
 $titulo = 'Nueva Rúbrica';
-include '../includes/header.php';
 
 $pdo = getDBConnection();
 $docente_id = $_SESSION['usuario_id'];
@@ -94,6 +94,8 @@ $stmt = $pdo->prepare("
 $stmt->execute([$docente_id]);
 $asignaturas = $stmt->fetchAll();
 ?>
+
+<?php include '../includes/header.php'; ?>
 
 <div class="row mb-4">
     <div class="col-12">

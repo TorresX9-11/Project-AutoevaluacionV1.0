@@ -54,7 +54,7 @@ $criterios = $stmt->fetchAll();
 $puntaje_total = 0;
 $puntaje_4_0 = 0;
 foreach ($criterios as $criterio) {
-    $nivel_puntajes = explode('||', $criterio['nivel_puntajes']);
+    $nivel_puntajes = explode('||', $criterio['nivel_puntajes'] ?? '');
     $max_puntaje = 0;
     foreach ($nivel_puntajes as $puntaje) {
         if (!empty($puntaje) && floatval($puntaje) > $max_puntaje) {
@@ -214,7 +214,7 @@ foreach ($criterios as $criterio) {
                 <th colspan="<?php 
                     $max_niveles = 0;
                     foreach ($criterios as $criterio) {
-                        $nivel_ids = explode('||', $criterio['nivel_ids']);
+                        $nivel_ids = explode('||', $criterio['nivel_ids'] ?? '');
                         $count = count(array_filter($nivel_ids));
                         if ($count > $max_niveles) {
                             $max_niveles = $count;
@@ -229,14 +229,14 @@ foreach ($criterios as $criterio) {
                 // Obtener todos los niveles únicos ordenados por puntaje descendente
                 $todos_niveles = [];
                 foreach ($criterios as $criterio) {
-                    $nivel_ids = explode('||', $criterio['nivel_ids']);
-                    $nivel_nombres = explode('||', $criterio['nivel_nombres']);
-                    $nivel_puntajes = explode('||', $criterio['nivel_puntajes']);
+                    $nivel_ids = explode('||', $criterio['nivel_ids'] ?? '');
+                    $nivel_nombres = explode('||', $criterio['nivel_nombres'] ?? '');
+                    $nivel_puntajes = explode('||', $criterio['nivel_puntajes'] ?? '');
                     for ($i = 0; $i < count($nivel_ids); $i++) {
                         if (!empty($nivel_ids[$i])) {
                             $todos_niveles[] = [
-                                'nombre' => $nivel_nombres[$i],
-                                'puntaje' => floatval($nivel_puntajes[$i])
+                                'nombre' => $nivel_nombres[$i] ?? '',
+                                'puntaje' => floatval($nivel_puntajes[$i] ?? 0)
                             ];
                         }
                     }
@@ -262,10 +262,10 @@ foreach ($criterios as $criterio) {
         <tbody>
             <?php foreach ($criterios as $index => $criterio): ?>
                 <?php
-                $nivel_ids = explode('||', $criterio['nivel_ids']);
-                $nivel_nombres = explode('||', $criterio['nivel_nombres']);
-                $nivel_descripciones = explode('||', $criterio['nivel_descripciones']);
-                $nivel_puntajes = explode('||', $criterio['nivel_puntajes']);
+                $nivel_ids = explode('||', $criterio['nivel_ids'] ?? '');
+                $nivel_nombres = explode('||', $criterio['nivel_nombres'] ?? '');
+                $nivel_descripciones = explode('||', $criterio['nivel_descripciones'] ?? '');
+                $nivel_puntajes = explode('||', $criterio['nivel_puntajes'] ?? '');
                 
                 // Obtener máximo puntaje del criterio
                 $max_puntaje_criterio = 0;

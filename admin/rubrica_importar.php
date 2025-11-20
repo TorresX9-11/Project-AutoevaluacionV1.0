@@ -3,7 +3,7 @@ require_once '../config/config.php';
 validarTipoUsuario(['docente', 'admin']);
 
 $titulo = 'Importar Rúbrica';
-include '../includes/header.php';
+// El include de header se mueve más abajo para permitir redirecciones antes de emitir salida
 
 $pdo = getDBConnection();
 $docente_id = $_SESSION['usuario_id'];
@@ -213,6 +213,8 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$docente_id]);
 $asignaturas = $stmt->fetchAll();
+// Incluir header después de procesar peticiones POST para evitar 'headers already sent'
+include '../includes/header.php';
 ?>
 
 <div class="row mb-4">

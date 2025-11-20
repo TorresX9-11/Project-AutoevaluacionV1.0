@@ -3,7 +3,7 @@ require_once '../config/config.php';
 validarTipoUsuario(['admin_supremo']);
 
 $titulo = 'Gestión de Estudiantes';
-include '../includes/header.php';
+// El include de header se mueve más abajo para permitir redirecciones antes de emitir salida
 
 $pdo = getDBConnection();
 
@@ -293,6 +293,8 @@ $sql .= " GROUP BY u.id ORDER BY u.apellido, u.nombre";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $estudiantes = $stmt->fetchAll();
+// Incluir header después de procesar peticiones POST para evitar 'headers already sent'
+include '../includes/header.php';
 ?>
 
 <div class="row mb-4">

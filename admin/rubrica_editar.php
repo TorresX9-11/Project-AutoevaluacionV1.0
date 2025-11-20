@@ -146,16 +146,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <h6><?php echo ($index + 1) . '. ' . htmlspecialchars($criterio['nombre']); ?></h6>
                                     <small class="text-muted">Peso: <?php echo number_format($criterio['peso'], 1); ?>%</small>
                                     <?php
-                                    $nivel_ids = explode('||', $criterio['nivel_ids']);
-                                    $nivel_nombres = explode('||', $criterio['nivel_nombres']);
-                                    $nivel_puntajes = explode('||', $criterio['nivel_puntajes']);
+                                    // GROUP_CONCAT puede devolver NULL si no hay niveles; manejarlo para evitar deprecated warnings
+                                    $nivel_ids = $criterio['nivel_ids'] !== null ? explode('||', $criterio['nivel_ids']) : [];
+                                    $nivel_nombres = $criterio['nivel_nombres'] !== null ? explode('||', $criterio['nivel_nombres']) : [];
+                                    $nivel_puntajes = $criterio['nivel_puntajes'] !== null ? explode('||', $criterio['nivel_puntajes']) : [];
                                     ?>
                                     <ul class="mt-2">
                                         <?php for ($i = 0; $i < count($nivel_ids); $i++): ?>
                                             <?php if (!empty($nivel_ids[$i])): ?>
+                                                <?php $nombreNivel = $nivel_nombres[$i] ?? ''; ?>
+                                                <?php $puntajeNivel = isset($nivel_puntajes[$i]) ? floatval($nivel_puntajes[$i]) : 0; ?>
                                                 <li>
-                                                    <?php echo htmlspecialchars($nivel_nombres[$i]); ?> 
-                                                    (<?php echo number_format($nivel_puntajes[$i], 1); ?> pts)
+                                                    <?php echo htmlspecialchars($nombreNivel); ?> 
+                                                    (<?php echo number_format($puntajeNivel, 1); ?> pts)
                                                 </li>
                                             <?php endif; ?>
                                         <?php endfor; ?>

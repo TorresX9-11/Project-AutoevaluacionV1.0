@@ -204,10 +204,10 @@ $tiempo_restante = $autoeval['tiempo_restante'] ?? AUTOEVAL_TIME_LIMIT;
     
     <?php foreach ($criterios as $index => $criterio): ?>
         <?php
-        $nivel_ids = explode('||', $criterio['nivel_ids']);
-        $nivel_nombres = explode('||', $criterio['nivel_nombres']);
-        $nivel_descripciones = explode('||', $criterio['nivel_descripciones']);
-        $nivel_puntajes = explode('||', $criterio['nivel_puntajes']);
+        $nivel_ids = explode('||', $criterio['nivel_ids'] ?? '');
+        $nivel_nombres = explode('||', $criterio['nivel_nombres'] ?? '');
+        $nivel_descripciones = explode('||', $criterio['nivel_descripciones'] ?? '');
+        $nivel_puntajes = explode('||', $criterio['nivel_puntajes'] ?? '');
         $respuesta_actual = $respuestas_map[$criterio['id']] ?? null;
         ?>
         
