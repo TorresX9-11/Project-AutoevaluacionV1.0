@@ -113,10 +113,9 @@ $respuestas = $stmt->fetchAll();
     </div>
     <div class="card-body">
         <?php 
-        $total_ponderado = 0;
+        $total_puntaje = 0;
         foreach ($respuestas as $resp): 
-            $ponderado = $resp['puntaje'] * ($resp['peso'] / 100);
-            $total_ponderado += $ponderado;
+            $total_puntaje += floatval($resp['puntaje']);
         endforeach;
         ?>
         
@@ -128,29 +127,23 @@ $respuestas = $stmt->fetchAll();
                     <th style="min-width: 150px;">Criterio</th>
                     <th style="min-width: 150px;">Nivel Seleccionado</th>
                     <th style="min-width: 100px;">Puntaje</th>
-                    <th style="min-width: 80px;">Peso</th>
-                    <th style="min-width: 130px;">Puntaje Ponderado</th>
                     <th style="min-width: 150px;">Comentario</th>
                 </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($respuestas as $resp): 
-                        $ponderado = $resp['puntaje'] * ($resp['peso'] / 100);
-                    ?>
+                    <?php foreach ($respuestas as $resp): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($resp['criterio_nombre']); ?></td>
                             <td><?php echo htmlspecialchars($resp['nivel_nombre']); ?></td>
                             <td><?php echo number_format($resp['nivel_puntaje'], 1); ?></td>
-                            <td><?php echo number_format($resp['peso'], 1); ?>%</td>
-                            <td><?php echo number_format($ponderado, 2); ?></td>
                             <td><?php echo $resp['comentario'] ? htmlspecialchars($resp['comentario']) : '-'; ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
                     <tr class="table-primary">
-                        <th colspan="4">Total</th>
-                        <th><?php echo number_format($total_ponderado, 2); ?></th>
+                        <th colspan="2">Total</th>
+                        <th><?php echo number_format($total_puntaje, 1); ?></th>
                         <th></th>
                     </tr>
                 </tfoot>
@@ -159,9 +152,7 @@ $respuestas = $stmt->fetchAll();
         
         <!-- Vista de cards para móvil -->
         <div class="d-md-none">
-            <?php foreach ($respuestas as $resp): 
-                $ponderado = $resp['puntaje'] * ($resp['peso'] / 100);
-            ?>
+            <?php foreach ($respuestas as $resp): ?>
                 <div class="card mb-3">
                     <div class="card-body">
                         <h6 class="card-title text-primary mb-2">
@@ -175,16 +166,6 @@ $respuestas = $stmt->fetchAll();
                             <div class="col-6">
                                 <small class="text-muted d-block">Puntaje:</small>
                                 <strong><?php echo number_format($resp['nivel_puntaje'], 1); ?></strong>
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-6">
-                                <small class="text-muted d-block">Peso:</small>
-                                <strong><?php echo number_format($resp['peso'], 1); ?>%</strong>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Puntaje Ponderado:</small>
-                                <strong class="text-success"><?php echo number_format($ponderado, 2); ?></strong>
                             </div>
                         </div>
                         <?php if ($resp['comentario']): ?>
@@ -202,7 +183,7 @@ $respuestas = $stmt->fetchAll();
                 <div class="card-body text-center">
                     <h5 class="mb-0">
                         <i class="bi bi-calculator"></i> Total: 
-                        <strong><?php echo number_format($total_ponderado, 2); ?></strong>
+                        <strong><?php echo number_format($total_puntaje, 1); ?></strong>
                     </h5>
                 </div>
             </div>

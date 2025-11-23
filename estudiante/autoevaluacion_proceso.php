@@ -113,16 +113,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     } elseif ($_POST['accion'] === 'finalizar') {
         // Finalizar autoevaluación
         try {
-            // Calcular nota
+            // Calcular puntaje total (suma directa de puntajes, sin ponderar)
             $stmt = $pdo->prepare("
-                SELECT SUM(ra.puntaje * c.peso / 100) as nota
+                SELECT SUM(ra.puntaje) as puntaje_total
                 FROM respuestas_autoevaluacion ra
-                JOIN criterios c ON ra.criterio_id = c.id
                 WHERE ra.autoevaluacion_id = ?
             ");
             $stmt->execute([$autoeval_id]);
             $resultado = $stmt->fetch();
-            $nota = $resultado['nota'] ?? 0;
+            $puntaje_total = floatval($resultado['puntaje_total'] ?? 0);
+            
+            // Obtener escala de notas de la rúbrica
+            $escala_notas = [];
+            $stmt_escala = $pdo->prepare("
+                SELECT escala_personalizada, escala_notas 
+                FROM rubricas 
+                WHERE id = ?
+            ");
+            $stmt_escala->execute([$autoeval['rubrica_id']]);
+            $rubrica_escala = $stmt_escala->fetch();
+            
+            if ($rubrica_escala && $rubrica_escala['escala_personalizada'] && !empty($rubrica_escala['escala_notas'])) {
+                $escala_notas = json_decode($rubrica_escala['escala_notas'], true);
+                if (!is_array($escala_notas) || !isset($escala_notas['puntaje_maximo'])) {
+                    $escala_notas = [];
+                }
+            }
+            
+            // Convertir puntaje a nota usando la escala
+            if (!empty($escala_notas)) {
+                $nota = convertirPuntajeANota($puntaje_total, $escala_notas);
+            } else {
+                // Si no hay escala configurada, usar el puntaje como nota
+                $nota = round($puntaje_total, 1);
+            }
             
             $tiempo_fin = date('Y-m-d H:i:s');
             $stmt = $pdo->prepare("

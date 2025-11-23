@@ -121,5 +121,58 @@ function validarRUT($rut) {
 
     return $dvCalc === strtoupper($dv);
 }
+
+/**
+ * Convierte un puntaje a nota usando la escala de notas personalizada
+ * @param float $puntaje_obtenido El puntaje obtenido por el estudiante
+ * @param array $escala_notas Array con los parámetros de la escala: puntaje_maximo, exigencia, nota_minima, nota_maxima, nota_aprobacion
+ * @return float La nota calculada (con 1 decimal)
+ */
+function convertirPuntajeANota($puntaje_obtenido, $escala_notas) {
+    if (empty($escala_notas) || !isset($escala_notas['puntaje_maximo'])) {
+        // Si no hay escala configurada, retornar el puntaje como está
+        return round($puntaje_obtenido, 1);
+    }
+    
+    $puntaje_maximo = floatval($escala_notas['puntaje_maximo'] ?? 0);
+    $exigencia = floatval($escala_notas['exigencia'] ?? 60);
+    $nota_minima = floatval($escala_notas['nota_minima'] ?? 1);
+    $nota_maxima = floatval($escala_notas['nota_maxima'] ?? 7);
+    $nota_aprobacion = floatval($escala_notas['nota_aprobacion'] ?? 4);
+    
+    if ($puntaje_maximo <= 0) {
+        return round($puntaje_obtenido, 1);
+    }
+    
+    // Asegurar que el puntaje no exceda el máximo
+    $puntaje_obtenido = min($puntaje_obtenido, $puntaje_maximo);
+    $puntaje_obtenido = max(0, $puntaje_obtenido); // No puede ser negativo
+    
+    // Calcular puntaje para nota de aprobación
+    $punto_aprobacion = $puntaje_maximo * $exigencia / 100;
+    
+    // Calcular nota usando interpolación lineal
+    if ($puntaje_obtenido <= $punto_aprobacion) {
+        // Interpolación lineal entre nota mínima y nota de aprobación
+        if ($punto_aprobacion > 0) {
+            $ratio = $puntaje_obtenido / $punto_aprobacion;
+        } else {
+            $ratio = 0;
+        }
+        $nota = $nota_minima + ($nota_aprobacion - $nota_minima) * $ratio;
+    } else {
+        // Interpolación lineal entre nota de aprobación y nota máxima
+        $rango_superior = $puntaje_maximo - $punto_aprobacion;
+        if ($rango_superior > 0) {
+            $ratio = ($puntaje_obtenido - $punto_aprobacion) / $rango_superior;
+        } else {
+            $ratio = 1;
+        }
+        $nota = $nota_aprobacion + ($nota_maxima - $nota_aprobacion) * $ratio;
+    }
+    
+    // Redondear a 1 decimal
+    return round($nota, 1);
+}
 ?>
 

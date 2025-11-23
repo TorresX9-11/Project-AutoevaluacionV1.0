@@ -28,8 +28,23 @@ $filtro_fecha_hasta = $_GET['fecha_hasta'] ?? '';
 $rubricas = [];
 
 if ($asignatura_id) {
+    // Verificar si las columnas de escala existen
+    $columnas_escala_existen = false;
+    try {
+        $stmt_check = $pdo->query("SHOW COLUMNS FROM rubricas LIKE 'escala_personalizada'");
+        $columnas_escala_existen = $stmt_check->rowCount() > 0;
+    } catch (PDOException $e) {
+        $columnas_escala_existen = false;
+    }
+    
+    $campos_escala = '';
+    if ($columnas_escala_existen) {
+        $campos_escala = ', r.escala_personalizada, r.escala_notas';
+    }
+    
     $sql = "
         SELECT r.*, a.nombre as asignatura_nombre, c.nombre as carrera_nombre
+        $campos_escala
         FROM rubricas r
         JOIN asignaturas a ON r.asignatura_id = a.id
         JOIN carreras c ON a.carrera_id = c.id
@@ -183,6 +198,7 @@ if ($asignatura_id) {
                                 <th class="text-long" style="min-width: 250px;">Descripción</th>
                                 <th style="min-width: 100px;" class="text-center">Criterios</th>
                                 <th style="min-width: 100px;" class="text-center">Estado</th>
+                                <th style="min-width: 120px;" class="text-center">Escala</th>
                                 <th style="min-width: 120px;">Fecha Creación</th>
                                 <th class="actions" style="min-width: 150px;">Acciones</th>
                             </tr>
@@ -194,6 +210,15 @@ if ($asignatura_id) {
                                 $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM criterios WHERE rubrica_id = ?");
                                 $stmt->execute([$rubrica['id']]);
                                 $criterios_count = $stmt->fetch()['total'];
+                                
+                                // Verificar si tiene escala configurada
+                                $tiene_escala = false;
+                                if ($columnas_escala_existen && isset($rubrica['escala_personalizada']) && $rubrica['escala_personalizada']) {
+                                    if (!empty($rubrica['escala_notas'])) {
+                                        $escala_data = json_decode($rubrica['escala_notas'], true);
+                                        $tiene_escala = (is_array($escala_data) && isset($escala_data['puntaje_maximo']));
+                                    }
+                                }
                                 ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($rubrica['nombre']); ?></td>
@@ -203,6 +228,17 @@ if ($asignatura_id) {
                                         <span class="badge bg-<?php echo $rubrica['activa'] ? 'success' : 'secondary'; ?>">
                                             <?php echo $rubrica['activa'] ? 'Activa' : 'Inactiva'; ?>
                                         </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php if ($tiene_escala): ?>
+                                            <span class="badge bg-success" title="Escala de notas configurada">
+                                                <i class="bi bi-check-circle"></i> Configurada
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger" title="Escala de notas no configurada">
+                                                <i class="bi bi-exclamation-triangle"></i> Pendiente
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                     <td><?php echo date('d/m/Y', strtotime($rubrica['created_at'])); ?></td>
                                     <td class="actions">

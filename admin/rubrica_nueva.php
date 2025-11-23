@@ -73,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             $pdo->commit();
-            $mensaje = 'Rúbrica creada exitosamente';
-            header('refresh:2;url=' . BASE_URL . 'admin/rubrica_editar.php?id=' . $rubrica_id);
+            header('Location: ' . BASE_URL . 'admin/rubrica_configurar_escala.php?id=' . $rubrica_id);
+            exit();
         } catch (PDOException $e) {
             $pdo->rollBack();
             error_log("Error al crear rúbrica: " . $e->getMessage());

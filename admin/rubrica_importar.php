@@ -124,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo'])) {
                 }
                 
                 $pdo->commit();
-                $mensaje = 'Rúbrica importada desde PDF exitosamente. Por favor, revise y ajuste los criterios y niveles.';
-                header('refresh:2;url=' . BASE_URL . 'admin/rubrica_editar.php?id=' . $rubrica_id);
+                header('Location: ' . BASE_URL . 'admin/rubrica_configurar_escala.php?id=' . $rubrica_id);
+                exit();
             } else {
                 // Importar desde CSV (código original)
                 $handle = fopen($tmp_name, 'r');
@@ -183,8 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo'])) {
                     
                     $pdo->commit();
                     fclose($handle);
-                    $mensaje = 'Rúbrica importada exitosamente';
-                    header('refresh:2;url=' . BASE_URL . 'admin/rubrica_ver.php?id=' . $rubrica_id);
+                    header('Location: ' . BASE_URL . 'admin/rubrica_configurar_escala.php?id=' . $rubrica_id);
+                    exit();
                 } else {
                     throw new Exception('Error al leer el archivo CSV');
                 }

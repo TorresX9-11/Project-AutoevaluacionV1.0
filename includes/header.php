@@ -43,7 +43,7 @@ if (isset($_SESSION['usuario_id'])) {
         <div class="container-fluid">
             <a class="navbar-brand" href="<?php echo BASE_URL; ?>index.php">
                 <img src="<?php echo BASE_URL; ?>assets/img/logo-uct.png" alt="TEC-UCT" height="40" class="me-2">
-                <span class="d-none d-md-inline">TEC-UCT Autoevaluación</span>
+                <span class="d-none d-md-inline">EvaluaTEC</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
