@@ -1,15 +1,15 @@
 <?php
 /**
  * Script para resetear la contraseña del admin_supremo
- * Ejecutar desde el navegador: http://localhost/Project-AutoevaluacionV1.0/resetear_admin_supremo.php
+ * Ejecutar desde el navegador: https://teclab.uct.cl/~emanuel.torres/Project-AutoevaluacionV1.0/resetear_admin_supremo.php
  */
 
 require_once 'config/config.php';
 
-// Solo permitir ejecución desde localhost
-if ($_SERVER['SERVER_NAME'] !== 'localhost' && $_SERVER['SERVER_NAME'] !== '127.0.0.1') {
-    die('Este script solo puede ejecutarse desde localhost.');
-}
+// // Solo permitir ejecución desde localhost
+// if ($_SERVER['SERVER_NAME'] !== 'localhost' && $_SERVER['SERVER_NAME'] !== '127.0.0.1') {
+//     die('Este script solo puede ejecutarse desde localhost.');
+// }
 
 $mensaje = '';
 $error = '';

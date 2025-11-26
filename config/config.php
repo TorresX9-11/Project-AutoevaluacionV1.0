@@ -4,7 +4,7 @@ session_start();
 
 // Configuración de errores
 // Cambiar 'desarrollo' a 'produccion' cuando se despliegue en producción
-$entorno = 'desarrollo'; // Opciones: 'desarrollo' | 'produccion'
+$entorno = 'produccion'; // Opciones: 'desarrollo' | 'produccion'
 
 if ($entorno === 'desarrollo') {
     error_reporting(E_ALL);
@@ -20,7 +20,7 @@ if ($entorno === 'desarrollo') {
 date_default_timezone_set('America/Santiago');
 
 // Rutas base
-define('BASE_URL', 'http://localhost/Project-AutoevaluacionV1.0/');
+define('BASE_URL', 'https://teclab.uct.cl/~emanuel.torres/Project-AutoevaluacionV1.0/');
 define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 
 // Configuración de correo
