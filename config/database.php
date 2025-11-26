@@ -9,10 +9,10 @@ define('DB_CHARSET', 'utf8mb4');
 */
 
 // Conexión remota (completa con tus credenciales reales)
-define('DB_HOST', 'tuservidor.remoto');
-define('DB_USER', 'usuario_remoto');
-define('DB_PASS', 'contraseña_remota');
-define('DB_NAME', 'autoeval_tecuct');
+define('DB_HOST', 'teclab.uct.cl');
+define('DB_USER', 'emanuel_torres');
+define('DB_PASS', 'Agil2025CIet');
+define('DB_NAME', 'emanuel_torres_db3');
 define('DB_CHARSET', 'utf8mb4');
 
 // Conexión a la base de datos
