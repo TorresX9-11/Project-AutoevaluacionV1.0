@@ -1,7 +1,7 @@
 <?php
 /**
  * Script para resetear la contraseña del admin_supremo
- * Ejecutar desde el navegador: http://localhost/autoeval/resetear_admin_supremo.php
+ * Ejecutar desde el navegador: http://localhost/Project-AutoevaluacionV1.0/resetear_admin_supremo.php
  */
 
 require_once 'config/config.php';

@@ -14,8 +14,29 @@ $mensaje = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_csv']) && isset($_POST['accion']) && $_POST['accion'] === 'carga_masiva') {
     $archivo = $_FILES['archivo_csv'];
     $carrera_id = $_POST['carrera_id_carga'] ?? null;
+    $asignaturas_ids = $_POST['asignaturas_ids'] ?? [];
+    $asignaturas_ids = array_unique(array_filter(array_map('intval', $asignaturas_ids)));
     
-    if ($archivo['error'] === UPLOAD_ERR_OK && $carrera_id) {
+    if ($archivo['error'] === UPLOAD_ERR_OK && $carrera_id && !empty($asignaturas_ids)) {
+        $placeholders = implode(',', array_fill(0, count($asignaturas_ids), '?'));
+        $stmtValidar = $pdo->prepare("
+            SELECT COUNT(*) as total 
+            FROM asignaturas 
+            WHERE carrera_id = ? AND activa = 1 AND id IN ($placeholders)
+        ");
+        $stmtValidar->execute(array_merge([$carrera_id], $asignaturas_ids));
+        if ((int)$stmtValidar->fetchColumn() !== count($asignaturas_ids)) {
+            $error = 'Seleccione asignaturas válidas para la carrera elegida.';
+        }
+    } elseif ($archivo['error'] !== UPLOAD_ERR_OK) {
+        $error = 'Error al subir el archivo';
+    } elseif (empty($carrera_id)) {
+        $error = 'Seleccione una carrera';
+    } elseif (empty($asignaturas_ids)) {
+        $error = 'Seleccione al menos una asignatura';
+    }
+
+    if (empty($error) && $archivo['error'] === UPLOAD_ERR_OK && $carrera_id && !empty($asignaturas_ids)) {
         $tmp_name = $archivo['tmp_name'];
         $handle = fopen($tmp_name, 'r');
         
@@ -26,7 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_csv']) && is
                 $exitosos = 0;
                 $errores = 0;
                 $errores_detalle = [];
-                
+                $stmtAsignatura = $pdo->prepare("
+                    INSERT IGNORE INTO estudiantes_asignaturas (estudiante_id, asignatura_id, activo) 
+                    VALUES (?, ?, 1)
+                ");
+
                 while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                     $linea++;
                     if ($linea === 1) continue; // Saltar encabezados
@@ -40,25 +65,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_csv']) && is
                         // Validar correo institucional
                         if (strpos($email, DOMINIO_ESTUDIANTE) !== false) {
                             // Verificar si el usuario existe
-                            $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+                            $stmt = $pdo->prepare("SELECT id, carrera_id FROM usuarios WHERE email = ?");
                             $stmt->execute([$email]);
                             $usuario = $stmt->fetch();
                             
                             if (!$usuario) {
-                                // Crear usuario
-                                $password_hash = password_hash('TecUct2024', PASSWORD_DEFAULT);
+                                // Crear usuario con la carrera de la asignatura
+                                $password_base = explode('@', $email)[0];
+                                if (empty($password_base)) {
+                                    $password_base = 'TecUct2024';
+                                }
+                                $password_hash = password_hash($password_base, PASSWORD_DEFAULT);
                                 $stmt = $pdo->prepare("
                                     INSERT INTO usuarios (email, password, nombre, apellido, rut, tipo, carrera_id, primera_vez) 
                                     VALUES (?, ?, ?, ?, ?, 'estudiante', ?, 1)
                                 ");
                                 $stmt->execute([$email, $password_hash, $nombre, $apellido, $rut, $carrera_id]);
-                                $exitosos++;
+                                $usuario_id = $pdo->lastInsertId();
                             } else {
-                                // Actualizar carrera si es necesario
-                                $stmt = $pdo->prepare("UPDATE usuarios SET carrera_id = ? WHERE id = ?");
-                                $stmt->execute([$carrera_id, $usuario['id']]);
-                                $exitosos++;
+                                $usuario_id = $usuario['id'];
+                                
+                                // Validar que el estudiante pertenezca a la carrera seleccionada
+                                if ($usuario['carrera_id'] && $usuario['carrera_id'] != $carrera_id) {
+                                    $errores++;
+                                    $errores_detalle[] = "Línea $linea: Estudiante $email pertenece a otra carrera";
+                                    continue;
+                                }
+                                
+                                if (empty($usuario['carrera_id'])) {
+                                    $stmtCarrera = $pdo->prepare("UPDATE usuarios SET carrera_id = ? WHERE id = ?");
+                                    $stmtCarrera->execute([$carrera_id, $usuario_id]);
+                                }
                             }
+                            
+                            foreach ($asignaturas_ids as $asignatura_id_final) {
+                                $stmtAsignatura->execute([$usuario_id, $asignatura_id_final]);
+                            }
+                            $exitosos++;
                         } else {
                             $errores++;
                             $errores_detalle[] = "Línea $linea: Email inválido ($email)";
@@ -84,8 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_csv']) && is
         } else {
             $error = 'Error al leer el archivo';
         }
-    } else {
-        $error = 'Error al subir el archivo o carrera no seleccionada';
     }
 }
 
@@ -258,6 +299,17 @@ if (isset($_GET['editar'])) {
 // Obtener carreras
 $stmt = $pdo->query("SELECT * FROM carreras WHERE activa = 1 ORDER BY nombre");
 $carreras = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT id, nombre, carrera_id FROM asignaturas WHERE activa = 1 ORDER BY nombre");
+$stmt->execute();
+$asignaturas_activas = $stmt->fetchAll();
+$asignaturas_por_carrera = [];
+foreach ($asignaturas_activas as $asig) {
+    $asignaturas_por_carrera[$asig['carrera_id']][] = [
+        'id' => $asig['id'],
+        'nombre' => $asig['nombre']
+    ];
+}
 
 // Filtros y búsqueda
 $carrera_filtro = $_GET['carrera_filtro'] ?? null;
@@ -486,6 +538,14 @@ include '../includes/header.php';
                             </select>
                         </div>
                         
+                        <div class="col-md-12 mb-3">
+                            <label for="asignaturas_ids" class="form-label">Asignaturas <span class="text-danger">*</span></label>
+                            <select class="form-select" id="asignaturas_ids" name="asignaturas_ids[]" multiple size="6" required disabled>
+                                <option value="">Seleccione primero una carrera con asignaturas</option>
+                            </select>
+                            <small class="text-muted">Seleccione al menos una asignatura dentro de la carrera elegida.</small>
+                        </div>
+
                         <div class="col-md-6 mb-3">
                             <label for="archivo_csv" class="form-label">Archivo CSV <span class="text-danger">*</span></label>
                             <input type="file" class="form-control" id="archivo_csv" name="archivo_csv" 
@@ -718,6 +778,45 @@ function formatearRUT(input) {
         }
     }
 }
+</script>
+
+<script>
+const asignaturasPorCarrera = <?php echo json_encode($asignaturas_por_carrera, JSON_UNESCAPED_UNICODE); ?>;
+const seleccionadasCarga = <?php echo json_encode(array_values(array_map('intval', $_POST['asignaturas_ids'] ?? []))); ?>;
+const carreraCargaSelect = document.getElementById('carrera_id_carga');
+const asignaturasCargaSelect = document.getElementById('asignaturas_ids');
+
+function actualizarAsignaturasCarga() {
+    if (!asignaturasCargaSelect || !carreraCargaSelect) return;
+
+    const carreraId = carreraCargaSelect.value;
+    asignaturasCargaSelect.innerHTML = '';
+
+    if (!carreraId || !asignaturasPorCarrera[carreraId]) {
+        asignaturasCargaSelect.innerHTML = '<option value="">Seleccione primero una carrera con asignaturas</option>';
+        asignaturasCargaSelect.disabled = true;
+        return;
+    }
+
+    asignaturasCargaSelect.disabled = false;
+    asignaturasPorCarrera[carreraId].forEach(asignatura => {
+        const option = document.createElement('option');
+        option.value = asignatura.id;
+        option.textContent = asignatura.nombre;
+        if (seleccionadasCarga.includes(asignatura.id)) {
+            option.selected = true;
+        }
+        asignaturasCargaSelect.appendChild(option);
+    });
+}
+
+if (carreraCargaSelect) {
+    carreraCargaSelect.addEventListener('change', actualizarAsignaturasCarga);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    actualizarAsignaturasCarga();
+});
 </script>
 
 <?php include '../includes/footer.php'; ?>
