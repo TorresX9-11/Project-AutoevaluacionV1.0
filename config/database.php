@@ -1,8 +1,17 @@
 <?php
 // Configuración de base de datos
+/*
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
+define('DB_NAME', 'autoeval_tecuct');
+define('DB_CHARSET', 'utf8mb4');
+*/
+
+// Conexión remota (completa con tus credenciales reales)
+define('DB_HOST', 'tuservidor.remoto');
+define('DB_USER', 'usuario_remoto');
+define('DB_PASS', 'contraseña_remota');
 define('DB_NAME', 'autoeval_tecuct');
 define('DB_CHARSET', 'utf8mb4');
 
