@@ -3,8 +3,7 @@
 // Funciones de utilidad
 function mostrarAlerta(mensaje, tipo = 'info') {
     const alert = document.createElement('div');
-    alert.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-    alert.style.zIndex = '9999';
+    alert.className = `alert alert-${tipo} alert-dismissible fade show alert-floating`;
     alert.innerHTML = `
         ${mensaje}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

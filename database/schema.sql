@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS rubricas (
     nombre VARCHAR(255) NOT NULL,
     descripcion TEXT,
     activa BOOLEAN DEFAULT TRUE,
+    escala_personalizada BOOLEAN DEFAULT FALSE,
+    escala_notas JSON NULL COMMENT 'Escala de notas personalizada en formato JSON',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE CASCADE

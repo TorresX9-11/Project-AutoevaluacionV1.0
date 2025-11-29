@@ -27,7 +27,7 @@ body {
     min-height: 100vh;
     padding-top: 56px; /* Altura del navbar fijo */
     margin: 0;
-    overflow-x: hidden;
+    overflow-x: auto;
 }
 
 /* Navbar personalizado - Fijo en la parte superior */
@@ -106,7 +106,14 @@ body > nav.navbar {
 /* Tablas responsive */
 .table-responsive {
     border-radius: 8px;
-    overflow: hidden;
+    /* Permitir scroll horizontal/vertical en tablas largas en lugar de recortar contenido */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    table-layout: auto; /* permitir columnas flexibles */
 }
 
 .table thead {
@@ -114,10 +121,59 @@ body > nav.navbar {
     color: var(--color-white);
 }
 
+/* Forzar que las celdas permitan salto de línea y no corten contenido */
+.table th,
+.table td {
+    vertical-align: middle;
+    white-space: normal; /* permitir wrapping */
+    word-break: break-word;
+}
+
+/* Evitar que columnas con texto largo colapsen el diseño en desktop: permitir ancho mínimo */
+.table td.col-ellipsis {
+    min-width: 180px;
+}
+
+/* Utilidad: forzar tabla sin wrap para habilitar scroll lateral cuando haya muchas columnas */
+.table-nowrap {
+    min-width: 900px; /* valor inicial; ajustar según necesidad */
+}
+.table-nowrap th,
+.table-nowrap td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Alertas */
 .alert {
     border-radius: 8px;
     border: none;
+}
+
+/* Dropdown de notificaciones responsivo */
+.notificaciones-dropdown {
+    min-width: 280px;
+    max-width: 360px;
+    width: auto;
+}
+
+.notificaciones-dropdown .dropdown-item {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Alertas flotantes responsivas */
+.alert-floating {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1055;
+    max-width: 480px;
+    width: calc(100% - 2rem);
+    margin: 0 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 /* Contador de tiempo */
@@ -235,6 +291,22 @@ footer {
     
     .navbar-brand span {
         display: none;
+    }
+
+    .alert-floating {
+        left: 0;
+        right: 0;
+        transform: none;
+        top: 60px;
+        max-width: 100%;
+        border-radius: 0;
+    }
+
+    .notificaciones-dropdown {
+        left: 0 !important;
+        right: 0 !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
     }
 }
 

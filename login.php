@@ -79,15 +79,24 @@ if (isset($_GET['recuperado'])) {
     <title>Iniciar Sesión - TEC-UCT Autoevaluación</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
+    <style>
+        body {
+            background-image: url('<?php echo BASE_URL; ?>assets/img/FondoLogin.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <div class="container">
         <div class="row justify-content-center align-items-center min-vh-100">
             <div class="col-md-5 col-lg-4">
                 <div class="card shadow">
                     <div class="card-header text-center">
                         <img src="<?php echo BASE_URL; ?>assets/img/logo-uct.png" alt="TEC-UCT" height="60" class="mb-3">
-                        <h4 class="mb-0">TEC-UCT Autoevaluación</h4>
+                        <h4 class="mb-0">EvaluaTEC</h4>
                     </div>
                     <div class="card-body p-4">
                         <?php if ($error): ?>

@@ -4,7 +4,7 @@ session_start();
 
 // Configuración de errores
 // Cambiar 'desarrollo' a 'produccion' cuando se despliegue en producción
-$entorno = 'desarrollo'; // Opciones: 'desarrollo' | 'produccion'
+$entorno = 'produccion'; // Opciones: 'desarrollo' | 'produccion'
 
 if ($entorno === 'desarrollo') {
     error_reporting(E_ALL);
@@ -20,7 +20,7 @@ if ($entorno === 'desarrollo') {
 date_default_timezone_set('America/Santiago');
 
 // Rutas base
-define('BASE_URL', 'http://localhost/autoeval/');
+define('BASE_URL', 'https://teclab.uct.cl/~emanuel.torres/Project-AutoevaluacionV1.0/');
 define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 
 // Configuración de correo
@@ -88,6 +88,91 @@ function validarCorreoInstitucional($email, $tipo) {
         return strpos($email, DOMINIO_DOCENTE) !== false;
     }
     return false;
+}
+
+// Función para validar RUT chileno (formato con o sin puntos y guion)
+function validarRUT($rut) {
+    if (empty($rut)) return false;
+    // Normalizar: eliminar puntos, espacios y convertir a mayúsculas
+    $rut = strtoupper(preg_replace('/[^0-9Kk]/', '', $rut));
+
+    if (strlen($rut) < 2) return false;
+
+    $dv = substr($rut, -1);
+    $numero = substr($rut, 0, -1);
+
+    if (!ctype_digit($numero)) return false;
+
+    $suma = 0;
+    $multiplo = 2;
+    for ($i = strlen($numero) - 1; $i >= 0; $i--) {
+        $suma += intval($numero[$i]) * $multiplo;
+        $multiplo = ($multiplo == 7) ? 2 : $multiplo + 1;
+    }
+
+    $resto = 11 - ($suma % 11);
+    if ($resto == 11) {
+        $dvCalc = '0';
+    } elseif ($resto == 10) {
+        $dvCalc = 'K';
+    } else {
+        $dvCalc = (string)$resto;
+    }
+
+    return $dvCalc === strtoupper($dv);
+}
+
+/**
+ * Convierte un puntaje a nota usando la escala de notas personalizada
+ * @param float $puntaje_obtenido El puntaje obtenido por el estudiante
+ * @param array $escala_notas Array con los parámetros de la escala: puntaje_maximo, exigencia, nota_minima, nota_maxima, nota_aprobacion
+ * @return float La nota calculada (con 1 decimal)
+ */
+function convertirPuntajeANota($puntaje_obtenido, $escala_notas) {
+    if (empty($escala_notas) || !isset($escala_notas['puntaje_maximo'])) {
+        // Si no hay escala configurada, retornar el puntaje como está
+        return round($puntaje_obtenido, 1);
+    }
+    
+    $puntaje_maximo = floatval($escala_notas['puntaje_maximo'] ?? 0);
+    $exigencia = floatval($escala_notas['exigencia'] ?? 60);
+    $nota_minima = floatval($escala_notas['nota_minima'] ?? 1);
+    $nota_maxima = floatval($escala_notas['nota_maxima'] ?? 7);
+    $nota_aprobacion = floatval($escala_notas['nota_aprobacion'] ?? 4);
+    
+    if ($puntaje_maximo <= 0) {
+        return round($puntaje_obtenido, 1);
+    }
+    
+    // Asegurar que el puntaje no exceda el máximo
+    $puntaje_obtenido = min($puntaje_obtenido, $puntaje_maximo);
+    $puntaje_obtenido = max(0, $puntaje_obtenido); // No puede ser negativo
+    
+    // Calcular puntaje para nota de aprobación
+    $punto_aprobacion = $puntaje_maximo * $exigencia / 100;
+    
+    // Calcular nota usando interpolación lineal
+    if ($puntaje_obtenido <= $punto_aprobacion) {
+        // Interpolación lineal entre nota mínima y nota de aprobación
+        if ($punto_aprobacion > 0) {
+            $ratio = $puntaje_obtenido / $punto_aprobacion;
+        } else {
+            $ratio = 0;
+        }
+        $nota = $nota_minima + ($nota_aprobacion - $nota_minima) * $ratio;
+    } else {
+        // Interpolación lineal entre nota de aprobación y nota máxima
+        $rango_superior = $puntaje_maximo - $punto_aprobacion;
+        if ($rango_superior > 0) {
+            $ratio = ($puntaje_obtenido - $punto_aprobacion) / $rango_superior;
+        } else {
+            $ratio = 1;
+        }
+        $nota = $nota_aprobacion + ($nota_maxima - $nota_aprobacion) * $ratio;
+    }
+    
+    // Redondear a 1 decimal
+    return round($nota, 1);
 }
 ?>
 
