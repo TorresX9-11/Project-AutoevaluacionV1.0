@@ -151,6 +151,31 @@ body > nav.navbar {
     border: none;
 }
 
+/* Dropdown de notificaciones responsivo */
+.notificaciones-dropdown {
+    min-width: 280px;
+    max-width: 360px;
+    width: auto;
+}
+
+.notificaciones-dropdown .dropdown-item {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Alertas flotantes responsivas */
+.alert-floating {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1055;
+    max-width: 480px;
+    width: calc(100% - 2rem);
+    margin: 0 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
 /* Contador de tiempo */
 .timer-container {
     position: sticky;
@@ -266,6 +291,22 @@ footer {
     
     .navbar-brand span {
         display: none;
+    }
+
+    .alert-floating {
+        left: 0;
+        right: 0;
+        transform: none;
+        top: 60px;
+        max-width: 100%;
+        border-radius: 0;
+    }
+
+    .notificaciones-dropdown {
+        left: 0 !important;
+        right: 0 !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
     }
 }
 

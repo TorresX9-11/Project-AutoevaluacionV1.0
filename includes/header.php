@@ -80,7 +80,7 @@ if (isset($_SESSION['usuario_id'])) {
                                     <span class="badge bg-danger rounded-pill"><?php echo $notificaciones_count; ?></span>
                                 <?php endif; ?>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" style="min-width: 300px; max-height: 400px; overflow-y: auto;">
+                            <ul class="dropdown-menu dropdown-menu-end notificaciones-dropdown" style="min-width: 300px; max-height: 400px; overflow-y: auto;">
                                 <li class="dropdown-header">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span>Notificaciones</span>

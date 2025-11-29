@@ -65,6 +65,8 @@ foreach ($respuestas as $resp) {
     $respuestas_map[$resp['criterio_id']] = $resp;
 }
 
+$criterios_faltantes_ids = [];
+
 // Guardar respuesta
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     if ($_POST['accion'] === 'guardar_respuesta') {
@@ -113,51 +115,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     } elseif ($_POST['accion'] === 'finalizar') {
         // Finalizar autoevaluación
         try {
-            // Calcular puntaje total (suma directa de puntajes, sin ponderar)
-            $stmt = $pdo->prepare("
-                SELECT SUM(ra.puntaje) as puntaje_total
-                FROM respuestas_autoevaluacion ra
-                WHERE ra.autoevaluacion_id = ?
-            ");
+            // Validar que todos los criterios tengan respuesta
+            $stmt = $pdo->prepare("SELECT id, nombre FROM criterios WHERE rubrica_id = ? ORDER BY orden");
+            $stmt->execute([$autoeval['rubrica_id']]);
+            $criterios_rubrica = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $stmt = $pdo->prepare("SELECT DISTINCT criterio_id FROM respuestas_autoevaluacion WHERE autoevaluacion_id = ?");
             $stmt->execute([$autoeval_id]);
-            $resultado = $stmt->fetch();
-            $puntaje_total = floatval($resultado['puntaje_total'] ?? 0);
-            
-            // Obtener escala de notas de la rúbrica
-            $escala_notas = [];
-            $stmt_escala = $pdo->prepare("
-                SELECT escala_personalizada, escala_notas 
-                FROM rubricas 
-                WHERE id = ?
-            ");
-            $stmt_escala->execute([$autoeval['rubrica_id']]);
-            $rubrica_escala = $stmt_escala->fetch();
-            
-            if ($rubrica_escala && $rubrica_escala['escala_personalizada'] && !empty($rubrica_escala['escala_notas'])) {
-                $escala_notas = json_decode($rubrica_escala['escala_notas'], true);
-                if (!is_array($escala_notas) || !isset($escala_notas['puntaje_maximo'])) {
-                    $escala_notas = [];
-                }
-            }
-            
-            // Convertir puntaje a nota usando la escala
-            if (!empty($escala_notas)) {
-                $nota = convertirPuntajeANota($puntaje_total, $escala_notas);
+            $criterios_respondidos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            $criterios_faltantes = array_filter($criterios_rubrica, function ($criterio) use ($criterios_respondidos) {
+                return !in_array($criterio['id'], $criterios_respondidos);
+            });
+
+            if (!empty($criterios_faltantes)) {
+                $criterios_faltantes_ids = array_column($criterios_faltantes, 'id');
+                $nombres_faltantes = array_map(function ($criterio) {
+                    return $criterio['nombre'];
+                }, $criterios_faltantes);
+
+                $error = 'Debe responder todos los ítems antes de finalizar. Falta por responder: ' . implode(', ', $nombres_faltantes) . '.';
             } else {
-                // Si no hay escala configurada, usar el puntaje como nota
-                $nota = round($puntaje_total, 1);
+                // Calcular puntaje total (suma directa de puntajes, sin ponderar)
+                $stmt = $pdo->prepare("
+                    SELECT SUM(ra.puntaje) as puntaje_total
+                    FROM respuestas_autoevaluacion ra
+                    WHERE ra.autoevaluacion_id = ?
+                ");
+                $stmt->execute([$autoeval_id]);
+                $resultado = $stmt->fetch();
+                $puntaje_total = floatval($resultado['puntaje_total'] ?? 0);
+                
+                // Obtener escala de notas de la rúbrica
+                $escala_notas = [];
+                $stmt_escala = $pdo->prepare("
+                    SELECT escala_personalizada, escala_notas 
+                    FROM rubricas 
+                    WHERE id = ?
+                ");
+                $stmt_escala->execute([$autoeval['rubrica_id']]);
+                $rubrica_escala = $stmt_escala->fetch();
+                
+                if ($rubrica_escala && $rubrica_escala['escala_personalizada'] && !empty($rubrica_escala['escala_notas'])) {
+                    $escala_notas = json_decode($rubrica_escala['escala_notas'], true);
+                    if (!is_array($escala_notas) || !isset($escala_notas['puntaje_maximo'])) {
+                        $escala_notas = [];
+                    }
+                }
+                
+                // Convertir puntaje a nota usando la escala
+                if (!empty($escala_notas)) {
+                    $nota = convertirPuntajeANota($puntaje_total, $escala_notas);
+                } else {
+                    // Si no hay escala configurada, usar el puntaje como nota
+                    $nota = round($puntaje_total, 1);
+                }
+                
+                $tiempo_fin = date('Y-m-d H:i:s');
+                $stmt = $pdo->prepare("
+                    UPDATE autoevaluaciones 
+                    SET estado = 'completada', nota_autoevaluada = ?, nota_final = ?, tiempo_fin = ? 
+                    WHERE id = ?
+                ");
+                $stmt->execute([$nota, $nota, $tiempo_fin, $autoeval_id]);
+                
+                header('Location: ' . BASE_URL . 'estudiante/autoevaluacion_ver.php?id=' . $autoeval_id);
+                exit();
             }
-            
-            $tiempo_fin = date('Y-m-d H:i:s');
-            $stmt = $pdo->prepare("
-                UPDATE autoevaluaciones 
-                SET estado = 'completada', nota_autoevaluada = ?, nota_final = ?, tiempo_fin = ? 
-                WHERE id = ?
-            ");
-            $stmt->execute([$nota, $nota, $tiempo_fin, $autoeval_id]);
-            
-            header('Location: ' . BASE_URL . 'estudiante/autoevaluacion_ver.php?id=' . $autoeval_id);
-            exit();
         } catch (PDOException $e) {
             error_log("Error al finalizar autoevaluación: " . $e->getMessage());
             $error = 'Error al finalizar la autoevaluación.';
@@ -193,6 +217,13 @@ $tiempo_restante = $autoeval['tiempo_restante'] ?? AUTOEVAL_TIME_LIMIT;
         </div>
     </div>
 </div>
+
+<style>
+.criterio-card.criterio-pendiente {
+    border: 2px solid #dc3545;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.35);
+}
+</style>
 
 <div class="row mb-4">
     <div class="col-12">
@@ -235,7 +266,10 @@ $tiempo_restante = $autoeval['tiempo_restante'] ?? AUTOEVAL_TIME_LIMIT;
         $respuesta_actual = $respuestas_map[$criterio['id']] ?? null;
         ?>
         
-        <div class="card mb-4 criterio-card" data-criterio-id="<?php echo $criterio['id']; ?>">
+        <?php $criterio_pendiente = in_array($criterio['id'], $criterios_faltantes_ids); ?>
+        <div class="card mb-4 criterio-card <?php echo $criterio_pendiente ? 'criterio-pendiente' : ''; ?>" 
+             data-criterio-id="<?php echo $criterio['id']; ?>"
+             data-criterio-nombre="<?php echo htmlspecialchars($criterio['nombre']); ?>">
             <div class="card-header">
                 <h5 class="mb-0">
                     Criterio <?php echo $index + 1; ?>: <?php echo htmlspecialchars($criterio['nombre']); ?>
@@ -257,7 +291,8 @@ $tiempo_restante = $autoeval['tiempo_restante'] ?? AUTOEVAL_TIME_LIMIT;
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card nivel-option h-100 
                                         <?php echo ($respuesta_actual && $respuesta_actual['nivel_id'] == $nivel_ids[$i]) ? 'selected' : ''; ?>"
-                                         onclick="seleccionarNivel(<?php echo $criterio['id']; ?>, <?php echo $nivel_ids[$i]; ?>, <?php echo $nivel_puntajes[$i]; ?>)">
+                                         data-nivel-id="<?php echo $nivel_ids[$i]; ?>"
+                                         onclick="seleccionarNivel(this, <?php echo $criterio['id']; ?>, <?php echo $nivel_ids[$i]; ?>)">
                                         <div class="card-body">
                                             <h6 class="card-title"><?php echo htmlspecialchars($nivel_nombres[$i]); ?></h6>
                                             <?php if (!empty($nivel_descripciones[$i])): ?>
@@ -358,8 +393,7 @@ function tiempoAgotado() {
 
 function mostrarAlerta(mensaje, tipo) {
     const alert = document.createElement('div');
-    alert.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-    alert.style.zIndex = '9999';
+    alert.className = `alert alert-${tipo} alert-dismissible fade show alert-floating`;
     alert.innerHTML = `
         ${mensaje}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -371,7 +405,7 @@ function mostrarAlerta(mensaje, tipo) {
     }, 5000);
 }
 
-function seleccionarNivel(criterioId, nivelId, puntaje) {
+function seleccionarNivel(element, criterioId, nivelId) {
     // Deseleccionar otros niveles
     const container = document.querySelector(`#niveles-${criterioId}`);
     container.querySelectorAll('.nivel-option').forEach(el => {
@@ -379,7 +413,8 @@ function seleccionarNivel(criterioId, nivelId, puntaje) {
     });
     
     // Seleccionar nivel
-    event.currentTarget.classList.add('selected');
+    element.classList.add('selected');
+    element.closest('.criterio-card').classList.remove('criterio-pendiente');
     
     // Guardar respuesta
     guardarRespuesta(criterioId, nivelId);
@@ -407,7 +442,7 @@ function guardarComentario(criterioId) {
     const respuesta = document.querySelector(`[data-criterio-id="${criterioId}"] .nivel-option.selected`);
     
     if (respuesta) {
-        const nivelId = respuesta.getAttribute('onclick').match(/\d+/)[0];
+        const nivelId = respuesta.dataset.nivelId;
         const formData = new FormData();
         formData.append('accion', 'guardar_respuesta');
         formData.append('criterio_id', criterioId);
@@ -432,7 +467,35 @@ function actualizarProgreso() {
     document.getElementById('progresoBadge').textContent = `${respondidos}/${total} criterios`;
 }
 
+function obtenerCriteriosSinRespuesta() {
+    const faltantes = [];
+    document.querySelectorAll('.criterio-card').forEach(card => {
+        const seleccionado = card.querySelector('.nivel-option.selected');
+        if (!seleccionado) {
+            card.classList.add('criterio-pendiente');
+            faltantes.push({
+                id: card.dataset.criterioId,
+                nombre: card.dataset.criterioNombre
+            });
+        } else {
+            card.classList.remove('criterio-pendiente');
+        }
+    });
+    return faltantes;
+}
+
 function finalizarAutoevaluacion() {
+    const faltantes = obtenerCriteriosSinRespuesta();
+    if (faltantes.length > 0) {
+        const nombres = faltantes.map(item => item.nombre).join(', ');
+        mostrarAlerta(`Debe responder todos los ítems antes de finalizar. Falta: ${nombres}`, 'danger');
+        const primerPendiente = document.querySelector('.criterio-card.criterio-pendiente');
+        if (primerPendiente) {
+            primerPendiente.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+    }
+    
     if (confirm('¿Está seguro de finalizar la autoevaluación? No podrá modificarla después.')) {
         const form = document.getElementById('formAutoevaluacion');
         const input = document.getElementById('accionInput');
@@ -445,6 +508,10 @@ function finalizarAutoevaluacion() {
 document.addEventListener('DOMContentLoaded', function() {
     iniciarContador();
     actualizarProgreso();
+    const primerPendiente = document.querySelector('.criterio-card.criterio-pendiente');
+    if (primerPendiente) {
+        primerPendiente.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 });
 
 // Guardar tiempo restante al salir

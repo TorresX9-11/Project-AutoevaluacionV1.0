@@ -131,10 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo'])) {
                 $handle = fopen($tmp_name, 'r');
                 
                 if ($handle !== false) {
-                    // Leer primera línea (encabezados)
-                    $encabezados = fgetcsv($handle, 1000, ',');
-                    
-                    // Leer nombre de rúbrica
+                    // Leer primera línea: nombre y descripción de la rúbrica
                     $linea_rubrica = fgetcsv($handle, 1000, ',');
                     $nombre_rubrica = $linea_rubrica[0] ?? 'Rúbrica Importada';
                     $descripcion_rubrica = $linea_rubrica[1] ?? '';
