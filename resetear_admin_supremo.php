@@ -1,7 +1,10 @@
 <?php
 /**
  * Script para resetear la contraseña del admin_supremo
+ * Ajusta la contraseña a "admin123" o cualquier otra, activa el usuario y verifica que funcione.
  * Ejecutar desde el navegador: https://teclab.uct.cl/~emanuel.torres/Project-AutoevaluacionV1.0/resetear_admin_supremo.php
+ * ajustar las rutas según sea necesario.
+ * Advertencia: Este script debe usarse con precaución y eliminarse después de su uso.
  */
 
 require_once 'config/config.php';

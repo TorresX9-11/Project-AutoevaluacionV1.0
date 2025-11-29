@@ -66,7 +66,7 @@ Si no tiene Composer instalado, descargarlo desde [https://getcomposer.org/](htt
 
 3. **Editar `config/config.php`:**
    ```php
-   define('BASE_URL', 'http://localhost/autoeval/');
+   define('BASE_URL', 'http://localhost/Project-AutoevaluacionV1.0/');
    define('SMTP_USER', 'tu_correo@gmail.com');
    define('SMTP_PASS', 'tu_contraseña_de_aplicacion');
    ```
@@ -97,7 +97,7 @@ Crear las siguientes carpetas si no existen:
 
 ### Paso 8: Acceder a la Plataforma
 
-1. Abrir el navegador y acceder a: `http://localhost/autoeval/`
+1. Abrir el navegador y acceder a: `http://localhost/Project-AutoevaluacionV1.0/`
 2. Iniciar sesión con el usuario administrador supremo por defecto:
    - **Email**: `admin_supremo@uct.cl`
    - **Contraseña**: `admin123` (cambiar inmediatamente después del primer acceso)

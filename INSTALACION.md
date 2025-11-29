@@ -100,7 +100,7 @@ Si no tiene Composer instalado:
 3. **Editar `config/config.php`:**
    ```php
    // Cambiar según su entorno
-   define('BASE_URL', 'http://localhost/autoeval/');
+   define('BASE_URL', 'http://localhost/Project-AutoevaluacionV1.0/');
    
    // Configuración de correo (Gmail)
    define('SMTP_HOST', 'smtp.gmail.com');
@@ -140,7 +140,7 @@ sudo chmod -R 775 /var/www/html/autoeval/uploads
 
 ### Paso 8: Configurar Apache (Opcional)
 
-Si desea usar un dominio personalizado, editar `/etc/apache2/sites-available/autoeval.conf`:
+Si desea usar un dominio personalizado, editar `/etc/apache2/sites-available/Project-AutoevaluacionV1.0.conf`:
 
 ```apache
 <VirtualHost *:80>
@@ -157,18 +157,19 @@ Si desea usar un dominio personalizado, editar `/etc/apache2/sites-available/aut
 
 Activar el sitio:
 ```bash
-sudo a2ensite autoeval.conf
+sudo a2ensite Project-AutoevaluacionV1.0.conf
 sudo systemctl reload apache2
 ```
 
 ### Paso 9: Verificar Instalación
 
-1. Abrir el navegador y acceder a: `http://localhost/autoeval/`
+1. Abrir el navegador y acceder a: `http://localhost/Project-AutoevaluacionV1.0/`
 2. Debería ver la página de login
 3. Iniciar sesión con el usuario administrador supremo:
    - **Email**: `admin_supremo@uct.cl`
    - **Contraseña**: `admin123`
 4. **IMPORTANTE**: Cambiar la contraseña después del primer acceso
+5. En caso de no poder ingresar por credenciales invalidas revisar el archivo "resetear_admin_supremo.php"
 
 **Nota**: El usuario `admin_supremo` es el principal del sistema y tiene acceso completo a todas las funcionalidades de administración.
 

@@ -20,7 +20,7 @@ if ($entorno === 'desarrollo') {
 date_default_timezone_set('America/Santiago');
 
 // Rutas base
-define('BASE_URL', 'http://localhost/project-autoevaluacionv1.0/');
+define('BASE_URL', 'https://teclab.uct.cl/~emanuel.torres/Project-AutoevaluacionV1.0/');
 define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 
 // Configuración de correo
